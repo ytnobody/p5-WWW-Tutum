@@ -12,6 +12,7 @@ use Class::Accessor::Lite (
     ro => [qw[username apikey json agent]],
     new => 0,
 );
+use WWW::Tutum::Action;
 
 our $VERSION = "0.01";
 our $TIMEOUT = 60;
@@ -42,7 +43,7 @@ sub build_request {
     }
     elsif ($method =~ /\Apost\z/i) {
         $headers->push_header(Content_type => 'application/json; charset=utf-8');
-        $body = $self->json->encode($params);
+        $body = $params ? $self->json->encode($params) : undef;
     }
 
     HTTP::Request->new($method, $uri->as_string, $headers, $body);
@@ -61,10 +62,16 @@ sub req {
         carp(
             sprintf('%s: %s',
                 $res->status_line,
-                $res->content
+                $res->content ? $self->json->decode($res->content)->{error} : undef
             )
         );
     }
+}
+
+sub actions {
+    my ($self, %opts) = @_;
+    my $res = $self->req(GET => '/api/v1/action/', {%opts});
+    map {WWW::Tutum::Action->new(%{$_}, tutum => $self)} @{$res->{objects} || []};
 }
 
 1;

@@ -11,8 +11,10 @@ my $tutum = WWW::Tutum->new(
     apikey   => $ENV{TUTUM_APIKEY},
 );
 
-my $res = $tutum->req(get => '/api/v1/action/');
-ok $res;
-diag explain($res);
+my @actions = $tutum->actions();
+ok 1;
+diag explain(@actions);
+
+diag explain($actions[0]->cancel);
 
 done_testing;
